@@ -24,7 +24,7 @@ func HashObject() {
 		os.Exit(1)
 	}
 	
-	obj := CreateFromFile(params.FileName[0])
+	obj := CreateBlob(params.FileName[0])
 	fmt.Println(obj.ObjectHash)
 	if params.Write {
 		obj.WriteObject()
