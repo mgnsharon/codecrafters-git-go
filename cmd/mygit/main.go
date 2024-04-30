@@ -19,9 +19,9 @@ func main() {
 	case "init":
 		cmd.GitInit()
 	case "cat-file":
-		
 		cmd.CatFile()
-
+	case "hash-object":
+		cmd.HashObject()
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
 		os.Exit(1)
