@@ -8,17 +8,30 @@ import (
 	"io"
 	"os"
 	"path"
+	"slices"
 	"strconv"
+	"strings"
 )
 
 type ObjectHash string
 
 type ObjectKind string
 
+type TreeContentType string
+
+type TreeFile struct {
+	Mode string
+	Name string
+	Hash string
+	Type TreeContentType
+}
+
 const (
 	ObjectKindBlob   ObjectKind = "blob"
 	ObjectKindCommit ObjectKind = "commit"
 	ObjectKindTree   ObjectKind = "tree"
+	TreeContentTypeBlob TreeContentType = "blob"
+	TreeContentTypeTree TreeContentType = "tree"
 )
 
 type GitObject struct {
@@ -44,6 +57,66 @@ func (g *GitObject) SetKind(kind ObjectKind) {
 	g.Kind = kind
 }
 
+func parseHeader(data []byte) (ObjectKind, int) {
+	i := bytes.IndexByte(data, byte(0))
+	h := bytes.Split(data[:i], []byte(" "))
+	var kind ObjectKind
+	switch string(h[0]) {
+	case "blob":
+		kind = ObjectKindBlob
+	case "commit":
+		kind = ObjectKindCommit
+	case "tree":
+		kind = ObjectKindTree
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown object kind: %s\n", kind)
+		os.Exit(1)	
+	}
+	
+	size, err := strconv.Atoi(string(h[1]))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error converting size: %s\n", err)
+		os.Exit(1)
+	}
+	return kind, size
+}
+
+func(g *GitObject) ParseTree() []TreeFile {
+	
+		files := []TreeFile{}
+		content := io.Reader(bytes.NewReader(g.Content))	
+		var b bytes.Buffer
+		io.Copy(&b, content)
+		for entry, err := b.ReadBytes(byte(0)); err == nil; {
+			w := bytes.Split(entry, []byte(" "))
+			Mode := string(w[0])
+			Name := strings.Trim(string(w[1]), "\x00")
+			
+			var sha [20]byte
+			b.Read(sha[:])
+			Hash := fmt.Sprintf("%x", sha)
+			Type := TreeContentTypeBlob
+			if Mode == "040000" {
+				Type = TreeContentTypeTree
+			}
+			files = append(files, TreeFile{Mode, Name, Hash, Type})
+			entry, err = b.ReadBytes(byte(0))
+		}
+
+		
+		slices.SortFunc(files, func(i, j TreeFile) int {
+			if i.Name < j.Name {
+				return -1
+			}
+			if i.Name > j.Name {	
+				return 1
+			}
+			return 0
+		})
+		return files
+
+}
+
 func ReadFromHash(hash string) *GitObject {
 	obj := &GitObject{}
 	fp := fmt.Sprint(".git", string(os.PathSeparator), "objects", string(os.PathSeparator), hash[:2], string(os.PathSeparator), hash[2:])
@@ -67,27 +140,9 @@ func ReadFromHash(hash string) *GitObject {
 		os.Exit(1)
 	}
 	
-	filedata := bytes.Split(data, []byte("\x00"))
-	header := bytes.Split(filedata[0], []byte(" "))
-	kind := header[0]
-	switch string(kind) {
-	case "blob":
-		obj.Kind = ObjectKindBlob
-	case "commit":
-		obj.Kind = ObjectKindCommit
-	case "tree":
-		obj.Kind = ObjectKindTree
-	default:
-		fmt.Fprintf(os.Stderr, "Unknown object kind: %s\n", kind)
-		os.Exit(1)	
-	}
-	obj.Size, err = strconv.Atoi(string(header[1]))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error converting size: %s\n", err)
-		os.Exit(1)
-	}
+	obj.Kind, obj.Size = parseHeader(data)
 	
-	obj.Content = filedata[1]
+	obj.Content = data[bytes.IndexByte(data, byte(0))+1:]
 	
 	return obj
 }
