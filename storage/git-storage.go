@@ -100,6 +100,7 @@ func parseHeader(data []byte) (ObjectKind, int) {
 }
 
 func (g *GitStorage) WriteObject() {
+	// create the Header & Content for the object to be compressed
 	data := []byte(fmt.Sprintf("%s %d\x00", g.Kind, g.Size))
 	data = append(data, g.Content...)
 	
@@ -119,7 +120,7 @@ func (g *GitStorage) WriteObject() {
 		fmt.Fprintf(os.Stderr, "Error creating directory: %s\n", err)
 		os.Exit(1)
 	}
-	if err := os.WriteFile(fp, b.Bytes(), 0755); err != nil {
+	if err := os.WriteFile(fp, b.Bytes(), 0644); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing file: %s\n", err)
 		os.Exit(1)
 	}
@@ -137,18 +138,17 @@ func CreateBlob(file string) *GitStorage {
 	obj.Kind = ObjectKindBlob
 	obj.Size = len(data)
 	obj.Content = data
-	obj.computeObjectHash()
+	obj.ObjectHash = []byte(computeObjectHash(obj))
 	return obj
 }
 
-func (g *GitStorage) computeObjectHash() {
+func computeObjectHash(g *GitStorage) string {
 	data := []byte(fmt.Sprintf("%s %d\x00", g.Kind, g.Size))
 	data = append(data, g.Content...)
 	
 	hash := sha1.New()
 	hash.Write(data)
-	g.ObjectHash = []byte(fmt.Sprintf("%x", hash.Sum(nil)))
-	
+	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 
 func(g *GitStorage) ParseTree() []TreeFile {
@@ -195,8 +195,8 @@ func CreateTree(d string) *GitStorage {
 	}
 	c := []byte{}
 	// iterate over the files in the current directory
-	 directories, err := os.ReadDir(d)
-	 if err != nil {
+		directories, err := os.ReadDir(d)
+		if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading directory: %s\n", err)
 		os.Exit(1)
 	}
@@ -215,26 +215,26 @@ func CreateTree(d string) *GitStorage {
 			c = append(c, createHash([]byte(obj.ObjectHash))...)
 		}
 	}
-		// create a Blob for each file
-		// and create a Tree for each directory Recursively
+	// create a Blob for each file
+	// and create a Tree for each directory Recursively
 
-		tree := &GitStorage{}
-		tree.Kind = ObjectKindTree
-		tree.Size = len(c)
-		tree.Content = c
-		tree.computeObjectHash()
-		tree.WriteObject()
-		return tree
-	}
+	tree := &GitStorage{}
+	tree.Kind = ObjectKindTree
+	tree.Size = len(c)
+	tree.Content = c
+	tree.ObjectHash = []byte(computeObjectHash(tree))
+	tree.WriteObject()
+	return tree
+}
 
-	func createHash(data []byte) []byte {
-		sha := sha1.New()
-		sha.Write([]byte(data))
-		hash := fmt.Sprintf("%x", sha.Sum(nil))
-		dhash, err := hex.DecodeString(hash)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error decoding hash: %s\n", err)
-			os.Exit(1)
-		}
-		return dhash
+func createHash(data []byte) []byte {
+	sha := sha1.New()
+	sha.Write([]byte(data))
+	hash := fmt.Sprintf("%x", sha.Sum(nil))
+	dhash, err := hex.DecodeString(hash)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error decoding hash: %s\n", err)
+		os.Exit(1)
 	}
+	return dhash
+}

@@ -29,7 +29,7 @@ func TestReadFromHash(t *testing.T) {
 }
 
 func TestCreateBlob(t *testing.T) {
-	
+	cdProjectRoot(t)
 	tcs := []struct {
 		name string
 		fileName string

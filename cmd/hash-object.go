@@ -8,13 +8,13 @@ import (
 	"github.com/fred1268/go-clap/clap"
 )
 
-type HashObjectParams struct {
+type params struct {
 	Write bool `clap:"--write,-w"`
 	FileName  []string `clap:"trailing"`
 }
 
 func HashObject() {
-	var params HashObjectParams
+	var params params
 	_, err := clap.Parse(os.Args[2:], &params)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing arguments: %s\n", err)
