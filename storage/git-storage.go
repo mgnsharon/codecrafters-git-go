@@ -151,19 +151,26 @@ func computeObjectHash(g *GitStorage) string {
 	return fmt.Sprintf("%x", hash.Sum(nil))
 }
 
+
+// ParseTree parses the content of the GitStorage and returns a slice of TreeFile.
+// Each TreeFile represents a file or directory in the Git storage.
+// The function reads the content byte by byte and extracts the mode, name, hash, and type of each file or directory.
+// It then sorts the TreeFile slice by name and returns the sorted slice.
 func(g *GitStorage) ParseTree() []TreeFile {
 	files := []TreeFile{}
 	content := io.Reader(bytes.NewReader(g.Content))	
 	var b bytes.Buffer
 	io.Copy(&b, content)
 	for entry, err := b.ReadBytes(byte(0)); err == nil; {
+		// parse the mode and name
+		// the name is null-terminated so we need to remove the null byte
 		w := bytes.Split(entry, []byte(" "))
 		Mode := string(w[0])
 		if strings.Index(Mode, "4") == 0 {
 			Mode = "040000"
 		}
 		Name := strings.Trim(string(w[1]), "\x00")
-		
+		// Read the next 20 bytes to get the hash
 		var sha [20]byte
 		b.Read(sha[:])
 		Hash := fmt.Sprintf("%x", sha)
@@ -223,7 +230,7 @@ func CreateTree(d string) *GitStorage {
 	tree.Size = len(c)
 	tree.Content = c
 	tree.ObjectHash = []byte(computeObjectHash(tree))
-	tree.WriteObject()
+	// tree.WriteObject()
 	return tree
 }
 

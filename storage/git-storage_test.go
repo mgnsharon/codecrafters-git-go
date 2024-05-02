@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path"
+	"slices"
 	"testing"
 )
 
@@ -43,6 +44,39 @@ func TestCreateBlob(t *testing.T) {
 			actual := CreateBlob(tc.fileName)
 			if tc.expected != string(actual.ObjectHash) {
 				t.Errorf("Expected %s, got %s", tc.expected, actual.ObjectHash)
+			}
+		})
+	}
+}
+
+func TestParseTree(t *testing.T) {
+	cdProjectRoot(t)
+	testdata := []TreeFile{
+		{ "100644", "gitattributes", "176a458f94e0ea5272ce67c36bf30b6be9caf623", TreeContentTypeBlob },
+		{ "040000", "test_dir_1", "b31be178b740a3e0fe91468d170000a20a14a269", TreeContentTypeTree },
+		{ "040000", "test_dir_2", "8816277598bb0417d1ea4fb40e1a6a487e53b455", TreeContentTypeTree },
+		{ "100644", "test_file_1.txt", "3b18e512dba79e4c8300dd08aeb37f8e728b8dad", TreeContentTypeBlob },
+	}
+	tcs := []struct {
+		name string
+		hash string
+		expected []TreeFile
+
+	}{
+		{ "testdata", "abc9ef84782c23419bd9c61f93a1352a26f99ced",  testdata},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			obj := ReadFromHash(tc.hash)
+			actual := obj.ParseTree()
+			if slices.CompareFunc(actual, tc.expected, func(i, j TreeFile) int {
+				if i.Name == j.Name && i.Hash == j.Hash && i.Mode == j.Mode && i.Type == j.Type {
+					return 0
+				}
+				return -1
+			}) != 0 {
+				t.Errorf("Expected %d, got %d", len(tc.expected), len(actual))
 			}
 		})
 	}
