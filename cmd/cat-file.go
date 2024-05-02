@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 
+	"github.com/codecrafters-io/git-starter-go/storage"
 	"github.com/fred1268/go-clap/clap"
 )
 
@@ -24,6 +27,6 @@ func CatFile() {
 		os.Exit(1)
 	}
 	
-	obj := ReadFromHash(params.Hash[0])
-	obj.PrintContent()
+	s := storage.ReadFromHash(params.Hash[0])
+	io.Copy(os.Stdout, bytes.NewReader(s.Content))
 }

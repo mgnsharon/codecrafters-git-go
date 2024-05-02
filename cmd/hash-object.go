@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/codecrafters-io/git-starter-go/storage"
 	"github.com/fred1268/go-clap/clap"
 )
 
@@ -24,7 +25,7 @@ func HashObject() {
 		os.Exit(1)
 	}
 	
-	obj := CreateBlob(params.FileName[0])
+	obj := storage.CreateBlob(params.FileName[0])
 	fmt.Println(obj.ObjectHash)
 	if params.Write {
 		obj.WriteObject()

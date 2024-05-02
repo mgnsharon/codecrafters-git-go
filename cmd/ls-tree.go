@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/codecrafters-io/git-starter-go/storage"
 	"github.com/fred1268/go-clap/clap"
 )
 
@@ -24,14 +25,26 @@ func LsTree() {
 		os.Exit(1)
 	}
 
-	obj := ReadFromHash(params.Hash[0])
-	files := obj.ParseTree()
+	files := getFilesFromHash(params.Hash[0])
 	
+	fmt.Print(getLsTreeOut(files, params.NameOnly))
+}
+
+func getFilesFromHash(hash string) []storage.TreeFile {
+	obj := storage.ReadFromHash(hash)
+	files := obj.ParseTree()
+
+	return files
+}
+
+func getLsTreeOut(files []storage.TreeFile, nameOnly bool) string {
+	out := ""
 	for _, file := range files {
-		if params.NameOnly {
-			fmt.Println(file.Name)
+		if nameOnly {
+			out += file.Name + "\n"
 		} else {
-			fmt.Printf("%s %s %s %s\n", file.Mode, file.Type, file.Hash, file.Name)
+			out += fmt.Sprintf("%s %s %s    %s\n", file.Mode, file.Type, file.Hash, file.Name)
 		}
 	}
+	return out
 }

@@ -24,6 +24,8 @@ func main() {
 		cmd.HashObject()
 	case "ls-tree":
 		cmd.LsTree()
+	case "write-tree":
+		cmd.WriteTree()
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
 		os.Exit(1)
