@@ -49,6 +49,27 @@ func TestCreateBlob(t *testing.T) {
 	}
 }
 
+func TestCreateCommit(t *testing.T) {
+	cdProjectRoot(t)
+	tcs := []struct {
+		name string
+		treeHash string
+		parent string
+		message string
+		expected string
+	}{
+		{ "testdata", "abc9ef84782c23419bd9c61f93a1352a26f99ced", "97579f55b9853b1cda99f6d0d7e639e2e96e55bf", "Test Commit", "6fd16a158682c3c410fc1ce27a258c68d3c9e8a6" },
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := CreateCommit(tc.treeHash, tc.message, tc.parent)
+			if tc.expected != string(actual.ObjectHash) {
+				t.Errorf("Expected %s, got %s", tc.expected, actual.ObjectHash)
+			}
+		})
+	}
+}
+
 func TestParseTree(t *testing.T) {
 	cdProjectRoot(t)
 	testdata := []TreeFile{

@@ -142,6 +142,24 @@ func CreateBlob(file string) *GitStorage {
 	return obj
 }
 
+func CreateCommit(tree string, message string, parent string) *GitStorage {
+	obj := &GitStorage{}
+	
+	data := fmt.Sprintf("tree %s\n", tree)
+	if parent != "" {
+		data += fmt.Sprintf("parent %s\n", parent)
+	}
+	data += "author Rico Suave <toosexy@forthis.code> 1714713144 -0400\n"
+	data += "committer Rico Suave <toosexy@forthis.code> 1714713144 -0400\n"
+	data += fmt.Sprintf("\n%s\n", message)
+
+	obj.Kind = ObjectKindCommit
+	obj.Size = len(data)
+	obj.Content = []byte(data)
+	obj.ObjectHash = []byte(computeObjectHash(obj))
+	return obj
+}
+
 func computeObjectHash(g *GitStorage) string {
 	data := []byte(fmt.Sprintf("%s %d\x00", g.Kind, g.Size))
 	data = append(data, g.Content...)

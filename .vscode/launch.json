@@ -10,7 +10,14 @@
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/cmd/mygit/main.go",
-      "args": ["hash-object", "-w", "orange.txt"]
+      "args": [
+        "commit-tree",
+        "abc9ef84782c23419bd9c61f93a1352a26f99ced",
+        "-p",
+        "97579f55b9853b1cda99f6d0d7e639e2e96e55bf",
+        "-m",
+        "test commit message"
+      ]
     }
   ]
 }
