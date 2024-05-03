@@ -26,7 +26,7 @@ func HashObject() {
 	}
 	
 	obj := storage.CreateBlob(params.FileName[0])
-	fmt.Println(obj.ObjectHash)
+	fmt.Println(string(obj.ObjectHash))
 	if params.Write {
 		obj.WriteObject()
 	}

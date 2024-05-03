@@ -196,14 +196,16 @@ func(g *GitStorage) ParseTree() []TreeFile {
 
 }
 
-func CreateTree(d string) *GitStorage {
+func CreateTree(d string, c []byte) *GitStorage {
 	if d == "" {
 		d = "."
 	}
-	c := []byte{}
+	if c == nil {
+		c = []byte{}
+	}
 	// iterate over the files in the current directory
-		directories, err := os.ReadDir(d)
-		if err != nil {
+	directories, err := os.ReadDir(d)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading directory: %s\n", err)
 		os.Exit(1)
 	}
@@ -213,13 +215,13 @@ func CreateTree(d string) *GitStorage {
 		}
 		
 		if f.IsDir() {
-			obj := CreateTree(path.Join(d, f.Name()))
-			c = append(c, []byte(fmt.Sprintf("040000 %s\x00", f.Name()))...)
-			c = append(c, createHash([]byte(obj.ObjectHash))...)
+			obj := CreateTree(path.Join(d, f.Name()), []byte{})
+			c = append(c, []byte(fmt.Sprintf("40000 %s\x00", f.Name()))...)
+			c = append(c, createSha1Hash(obj.ObjectHash)...)
 		} else {
 			obj := CreateBlob(path.Join(d, f.Name()))
 			c = append(c, []byte(fmt.Sprintf("100644 %s\x00", f.Name()))...)
-			c = append(c, createHash([]byte(obj.ObjectHash))...)
+			c = append(c, createSha1Hash(obj.ObjectHash)...)
 		}
 	}
 	// create a Blob for each file
@@ -230,18 +232,16 @@ func CreateTree(d string) *GitStorage {
 	tree.Size = len(c)
 	tree.Content = c
 	tree.ObjectHash = []byte(computeObjectHash(tree))
-	// tree.WriteObject()
+	
 	return tree
 }
 
-func createHash(data []byte) []byte {
-	sha := sha1.New()
-	sha.Write([]byte(data))
-	hash := fmt.Sprintf("%x", sha.Sum(nil))
-	dhash, err := hex.DecodeString(hash)
+func createSha1Hash(data []byte) []byte {
+	h, err := hex.DecodeString(string(data))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error decoding hash: %s\n", err)
+		fmt.Fprintf(os.Stderr, "Error decoding hex: %s\n", err)
 		os.Exit(1)
 	}
-	return dhash
+	
+	return h
 }

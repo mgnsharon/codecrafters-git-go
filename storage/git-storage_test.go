@@ -83,36 +83,36 @@ func TestParseTree(t *testing.T) {
 }
 
 func TestCreateTree(t *testing.T) {
+	cdProjectRoot(t)
 	tcs := []struct {
 		name string
 		dirname string
 		expected string
 	}{
-		{ "testdata", "testdata", "abc9ef84782c23419bd9c61f93a1352a26f99ced" },
+		{ "testdata", "storage/testdata", "abc9ef84782c23419bd9c61f93a1352a26f99ced" },
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := CreateTree(tc.dirname)
+			actual := CreateTree(tc.dirname, []byte{})
 			if tc.expected != string(actual.ObjectHash) {
 				t.Errorf("Expected %s, got %s", tc.expected, actual.ObjectHash)
 			}
 		})
 	}
 }
-func TestCreateHash(t *testing.T) {
+func TestCreateSha1Hash(t *testing.T) {
 	tcs := []struct {
 		name string
 		input []byte
 		expected []byte
 	}{
-		{ "empty string", []byte(""), []byte("e69de29bb2d1d6434b8b29ae775ad8c2e48c5391") },
-		{ "hello world", []byte("hello world"), []byte("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c") },
-		{ "hello world with newline", []byte("hello world\n"), []byte("6adfb183a4a2c94a2f92dab5ade762a47889a5a1") },
+		{ "gitattributes", []byte("176a458f94e0ea5272ce67c36bf30b6be9caf623"), []byte("\x17jE\x8f\x94\xe0\xeaRr\xceg\xc3k\xf3\vk\xe9\xca\xf6#") },
+		
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := createHash(tc.input)
-			if bytes.Equal(tc.expected, actual) {
+			actual := createSha1Hash(tc.input)
+			if !bytes.Equal(tc.expected, actual) {
 				t.Errorf("Expected %s, got %s", tc.expected, actual)
 			}
 		})

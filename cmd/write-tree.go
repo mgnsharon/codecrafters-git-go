@@ -7,6 +7,7 @@ import (
 )
 
 func WriteTree() {
-	obj := storage.CreateTree(".")
-	fmt.Println(obj.ObjectHash)
+	obj := storage.CreateTree(".", []byte{})
+	obj.WriteObject()
+	fmt.Println(string(obj.ObjectHash))
 }
